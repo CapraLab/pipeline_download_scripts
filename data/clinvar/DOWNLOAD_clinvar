@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+#
+# Downloads the most up-to-date ClinVar associations from NCBI in VCF format
+# for both hg19/GRCh37 and GRCh38
+#
+# Note that after download, to break the downloaded .vcf file(s) into per-chromosome file, a manual step
+# described at end of the script, is required
+
+USER=`whoami`
+DATE=`date +%Y-%m-%d`
+
+# All files are downloaded to current_working_directory/$DATE
+# At the end of the script a link from currnet_working_directory/current is made, for convenience
+mkdir -p $DATE
+
+# Copy this script into the new directory, as record
+cp ${0##*/} $DATE
+
+
+# Apparently there used to be a bin/ directory.  This seems gone now
+# cp -R bin $DATE
+
+# Download GRCh37.  Exit the script if error
+cmd="wget --no-parent -P $DATE/GRCh37 -N --reject -nH -nd --timeout=100000 ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/*.vcf*"
+echo Executing $cmd
+`$cmd`
+if [ $? -ne 0]; then
+    echo "Failure Unable to download GRCh37 clinvar data"
+    exit 1
+fi
+echo 'Successful wget of clinvar for GRCh37'
+
+# Download GRCh38.  Exit the script if error
+cmd="wget --no-parent -P $DATE/GRCh38 -N --reject -nH -nd --timeout=100000 ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/*.vcf*"
+echo Executing $cmd
+`$cmd`
+if [ $? -ne 0]; then
+    echo "Failure: Unable to download GRCh38 clinvar data"
+    exit 1
+fi
+echo 'Successful wget of clinvar for GRCh38'
+
+# Remove the current/ symlink and repoint it to the newly arrived download
+rm -f current
+ln -s $DATE current
+
+# Create README
+echo "# MAINTAINER: $USER" >> $DATE/README
+echo "# EMAIL: chris.moth@vanderbilt.edu" >> $DATE/README
+echo "# LAST_DOWNLOAD: $DATE" >> $DATE/README
+echo "# UPDATE_CMD: ${0}" >> $DATE/README
+#echo "# CITATION: PMID: XXXXXXX" >> $DATE/README
+
+echo "" >> $DATE/README
+echo "MANIFEST:" >> $DATE/README
+ls $DATE >> $DATE/README
+
+echo ""
+echo "**************"
+echo ""
+echo "UPDATE ${DATE}/README"
+echo ""
+echo "**************"
+
+# IMPORTANT #
+echo If you want to break a file into .chr, do that with a quick command like this - after checking needed head lines
+echo You must modify the clinvar_nnnnnn filename in this command, in addition to the head -nn parameter to accomplish this
+echo 'for x in `seq 22` X Y; do echo $x; zcat clinvar_20200602.vcf.gz | head -28 > clinvar_20200602.chr$x.vcf; zgrep -E "^$x"$'\t' clinvar_20200602.vcf.gz >> clinvar_20200602.chr$x.vcf; done'
+
+
