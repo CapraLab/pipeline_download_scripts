@@ -65,6 +65,6 @@ echo "**************"
 # IMPORTANT #
 echo If you want to break a file into .chr, do that with a quick command like this - after checking needed head lines
 echo You must modify the clinvar_nnnnnn filename in this command, in addition to the head -nn parameter to accomplish this
-echo 'for x in `seq 22` X Y; do echo $x; zcat clinvar_20200602.vcf.gz | head -28 > clinvar_20200602.chr$x.vcf; zgrep -E "^$x"$'\t' clinvar_20200602.vcf.gz >> clinvar_20200602.chr$x.vcf; done'
+echo 'for x in `seq 22` X Y; do echo $x; zcat clinvar_20200602.vcf.gz | head -28 > clinvar_20200602.chr$x.vcf; zgrep -P "^$x\t" clinvar_20200602.vcf.gz >> clinvar_20200602.chr$x.vcf; done'
 
 
