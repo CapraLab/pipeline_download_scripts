@@ -1,0 +1,112 @@
+#!/bin/bash
+# There is no need to download this dataset unless you are setting up a SQL database for
+# The PDBMap/Personal Structural Biology Pipeline
+#
+# Instructions to replicate prior COSMIC download
+# Previously performed by Chris Moth and Souhrid Mukherjee
+#
+# Registration with COSMIC required to download/update this dataset.
+# Important: Check the website "https://cancer.sanger.ac.uk/cosmic/download#" for the latest version, 
+# as you will have to modify this script to load the latest files available with curl
+#
+# This script goes to great pains to fetch files for both GRCh37 and GRCh38
+# and to emulate the directory layout of COSMIC
+# 
+# The pain of it lies in COSMIC's shrouding of their AWS hosted files
+# and there is no easy way to "grab everything overnight" as in so many
+# of our other downloads
+#
+# COSMIC DATA IS FOR CAPRA LAB ACADEMIC USE ONLY
+#
+# Last Download July-07 2021 v94
+#
+# PDBMap load command:
+# ./pdbmap.py -c /dors/capra_lab/users/mothcw/UDNtests/config/global.config load_vcf --dlabel cosmic --buffer_size 100000 /dors/capra_lab/data/cosmic/v94/GRCh38/VCF/CosmicCodingMuts.normal.vcf.gz
+# 
+
+COSMIC_VERSION=v94
+
+# In theory, one could get all available files in one shot
+# In practice things can get tedious and you have to run through
+# the script with smaller subsets of available files documented at
+# https://cancer.sanger.ac.uk/cosmic/download
+# 
+# To create the fileList below, I literally did "view source"
+# on the COSMIC download page, and scraped the downloadWholeFile
+# entries in the .html
+#
+# Tedious!
+fileList=(
+'CosmicCompleteTargetedScreensMutantExport.tsv.gz'
+'CosmicGenomeScreensMutantExport.tsv.gz'
+'CosmicMutantExport.tsv.gz'
+'CosmicStructExport.tsv.gz'
+'CosmicBreakpointsExport.tsv.gz'
+'CosmicFusionExport.tsv.gz'
+'CosmicMutantExportCensus.tsv.gz'
+'CosmicNCV.tsv.gz'
+'CosmicCompleteCNA.tsv.gz'
+'CosmicCompleteGeneExpression.tsv.gz'
+'CosmicCompleteDifferentialMethylation.tsv.gz'
+'CosmicSample.tsv.gz'
+'CosmicHGNC.tsv.gz'
+'CosmicResistanceMutations.tsv.gz'
+'CosmicMutationTracking.tsv.gz'
+'CosmicCodingMuts.vcf.gz'
+'CosmicCodingMuts.normal.vcf.gz'
+'CosmicNonCodingVariants.vcf.gz'
+'CosmicNonCodingVariants.normal.vcf.gz'
+'CosmicTranscripts.tsv.gz'
+
+'Cancer_Gene_Census_Hallmarks_Of_Cancer.tsv.gz'
+'All_COSMIC_Genes.fasta.gz'
+
+'VCF/CosmicCodingMuts.vcf.gz'
+'VCF/CosmicCodingMuts.normal.vcf.gz'
+'VCF/CosmicNonCodingVariants.vcf.gz'
+'VCF/CosmicNonCodingVariants.normal.vcf.gz'
+)
+
+mkdir -p $COSMIC_VERSION
+echo "Directory " `pwd`"/$COSMIC_VERSION" created
+cd $COSMIC_VERSION
+# Authentication string generated on my email address and COSMIC password
+# See https://cancer.sanger.ac.uk/cosmic/download
+AUTHENTICATION_STRING=A######################################################B
+#
+# Get a download link by following step 2:
+# For each file they offer, an expiring AccessKey will come back to you in JSON something like:
+# {"url":"https://cog.sanger.ac.uk/cosmic/GRCh38/cosmic/v92/CosmicMutationTracking.tsv.gz?AWSAccessKeyId=KRV7P7QR9DL41J9EWGA2&Expires=1603109497&Signature=iX0WbfqtvVjbbN8LSbdFEeQHumc%3D"}
+
+# genomes=('GRCh37' 'GRCh38') # The PSB Pipeline only uses GRCh38
+genomes=('GRCh38')
+for genome in ${genomes[@]}; do
+echo $genome
+for file in ${fileList[@]}; do
+echo "###########################################"
+target_dir=$genome/`dirname $file`/
+mkdir -pv $target_dir
+echo Downloading COSMIC $genome $file 
+echo to $target_dir$file
+echo "###########################################"
+curl_parameters=('curl' '-H' "\"Authorization: Basic $AUTHENTICATION_STRING\"" "https://cancer.sanger.ac.uk/cosmic/file_download/$genome/cosmic/$COSMIC_VERSION/$file")
+echo ${curl_parameters[@]}
+download_link_json=`eval ${curl_parameters[@]}`
+echo json = $download_link_json
+# AWSAccessKeyIdwrapper=`grep -io "AWSAccessKeyId=\.\*&Expires" <<< "$json"`
+echo attempting grep
+AWSAccessKeyId_wrapper=`grep -io 'AWSAccessKeyId.*&Expires.*Signature.*"' <<< $download_link_json`
+# Extract the key we need for the download by removing the descriptive around it
+# voilla
+AWSAccessKeyId=${AWSAccessKeyId_wrapper:15:-1}
+echo  voilla $AWSAccessKeyId
+
+# Finally - we can download the file of interest
+curl_parameters=('curl' "\"https://cog.sanger.ac.uk/cosmic/$genome/cosmic/$COSMIC_VERSION/$file?AWSAccessKeyId=$AWSAccessKeyId\"" '-o' "$genome/$file")
+echo ${curl_parameters[@]}
+eval ${curl_parameters[@]}
+
+# echo grep above $AWSAccessKeyId_wrapper
+# echo $AWSAccessKeyIdwrapper
+done # fileList loop
+done # genomes loop
