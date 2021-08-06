@@ -1,0 +1,2 @@
+#Initial script to download alphafold Human model set.
+wget --no-parent -N --reject -nH -nd --timeout=100000 https://ftp.ebi.ac.uk/pub/databases/alphafold/UP000005640_9606_HUMAN.tar
