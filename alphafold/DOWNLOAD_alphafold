@@ -3,20 +3,25 @@
 TAR_FILENAME=UP000005640_9606_HUMAN.tar
 mkdir -pv human
 cd human
+echo Downloading $TAR_FILENAME from ftp.ebi.ac.uk
 wget --no-parent -N --reject -nH -nd --timeout=100000 https://ftp.ebi.ac.uk/pub/databases/alphafold/$TAR_FILENAME
+echo Extracting model files from $TAR_FILENAME
+tar xf $TAR_FILENAME
 # The 5GB tar file does not have a directory heirarchy.  So, we iterate over the modeol filenames and we
 # extract the uniprot ID from each filename, and then mkdir first2/second2/ and move the file there
 # Inspried by Bian Li's python script organize.py
+echo Moving model files into a directory heirarchy
 move_count=0
 for filename in $(tar tf $TAR_FILENAME) 
 do
 uniprot_id_first2=${filename:3:2}
 uniprot_id_second2=${filename:5:2}
 model_path="./"$uniprot_id_first2"/"$uniprot_id_second2"/"
-mkdir -p model_path
+mkdir -p $model_path
 mv -v $filename $model_path
 move_count=$((move_count+1))
 # echo $filename $uniprot_id_first2 $uniprot_id_second2 $model_path
 done
 printf "%d alphafold model files moved into subdirectories\n" $move_count
 cd ..
+
