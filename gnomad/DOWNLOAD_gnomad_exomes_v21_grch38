@@ -1,0 +1,51 @@
+#!/bin/bash
+
+echo "2019-12-04 Chris Moth installed the gsutil program per link to google from"
+echo "https://gnomad.broadinstitute.org/downloads"
+echo 
+echo "Attempting gsutil listing of gnomad repository"
+lscmd='gsutil ls -l gs://gnomad-public/release/'
+echo $lscmd
+`echo $lscmd`
+
+if [ $? != 0 ]
+then
+echo "Fundamental failure running $lscmd.  Exiting"
+exit
+fi
+
+echo 
+echo 'Enter the version of release to download.  Ex: 2.1.1'
+read -p'--> ' gnomad_version
+gnomad_version="${gnomad_version:=ABORT}"
+
+if [ $gnomad_version = 'ABORT' ]
+then
+echo "Aborting $0"
+exit
+fi
+
+if [ -d $gnomad_version ]
+then
+echo "You have already downloaded to the $gnomad_version directory.  Please mv/rm directory $gnomad_version and retry this script."
+exit
+else
+
+mkdir -p $gnomad_version/liftover_grch38/vcf/exomes
+if [ $? != 0 ]
+then
+echo "unable to mkdir $gnomad_version.  Halting"
+exit
+fi
+
+cpcmd="gsutil -m cp -R gs://gnomad-public/release/$gnomad_version/liftover_grch38/vcf/exomes $gnomad_version/liftover_grch38/vcf/exomes"
+echo "Download to $gnomad_version directory starting...."
+echo $cpcmd
+`echo $cpcmd`
+if [ $? != 0 ]
+then
+echo "gsutil cp    failed"
+exit
+fi
+
+fi
