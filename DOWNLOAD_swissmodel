@@ -1,0 +1,46 @@
+#!/bin/bash
+#Download the latest swissmodel set, and link swissmodel/current to it
+
+USER=`whoami`
+DATE=`date +%Y-%m-%d`
+
+mkdir $DATE
+
+# Copy this script and scripts in bin/ into the new directory
+cp ${0##*/} $DATE
+
+echo "Downloading tar of swissmodel coordinates files"
+cmd="wget https://swissmodel.expasy.org/repository/download/core_species/9606_coords.tar.gz -nH --no-parent -P $DATE -nd"
+echo $cmd
+eval $cmd
+echo ""
+
+echo "Downloading fasta file of amino acid sequences used for the models"
+cmd="wget ftp://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/reference_proteomes/Eukaryota/UP000005640/UP000005640_9606.fasta.gz -P $DATE -nd"
+eval $cmd
+echo ""
+
+echo "Extracting models from the downloaded tar file"
+cd $DATE
+tar -xzf 9606_coords.tar.gz
+if [[ $? != 0 ]]; then
+echo "Errors extracting models.  Halting script"
+exit 1
+fi
+
+cd ..
+
+# Update symbolic link to current version
+rm -v current
+ln -sv $DATE/ current
+
+# Create README
+echo "# LAST DOWNLOAD: $USER" >> $DATE/README
+echo "# LAST_UPDATE: `date`" >> $DATE/README
+echo "# UPDATE_CMD: ${0}" >> $DATE/README
+
+echo "" >> $DATE/README
+echo "MANIFEST:" >> $DATE/README
+ls $DATE >> $DATE/README
+
+echo "Swissmodel download complete.  See $(pwd)/current/"
