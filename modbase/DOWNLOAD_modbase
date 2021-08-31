@@ -1,0 +1,43 @@
+#!/bin/bash
+
+# Per 2020-80-28 Email from Ben Webb at salilab.org (ben@salilab.org)
+# A downloadable repository of latest GRCh38 models, Modbase2020, is here:
+
+modbase_grch38_url="https://salilab.org/modbase-download/projects/genomes/H_sapiens/2020/"
+
+USER=`whoami`
+DATE=`date +%Y-%m-%d`
+
+mkdir -pv $DATE
+
+# Copy this script and scripts in bin/ into the new directory
+cp -vp ${0##*/} $DATE
+
+
+echo "Downloading tar of modbase model coordinates files"
+cmd="wget $modbase_grch38_url -nH --no-parent -P $DATE -nd --mirror"
+echo $cmd
+eval $cmd
+echo ""
+
+
+model_tar_file="Homo_sapiens_2020.tar"
+echo "Extracting models from the downloaded tar file $model_tar_file"
+cd $DATE
+tar -xf $model_tar_file
+if [[ $? != 0 ]]; then
+echo "Errors extracting models.  Halting script"
+exit 1
+fi
+
+cd ..
+
+# Update symbolic link to current version
+rm current
+ln -s $DATE/ current
+
+# Create README
+echo "# MAINTAINER: $USER" >> $DATE/README
+echo "# LAST_UPDATE: `date`" >> $DATE/README
+echo "# UPDATE_CMD: ${0}" >> $DATE/README
+#echo "# CITATION: PMID: XXXXXXX" >> $DATE/README
