@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# The vep_cache is used by the variant effect predictor
+# It may not be needed for basic pipeline operation from a missense.csv file
+#
+mkdir -p vep_cache
+cd vep_cache
+curl -O ftp://ftp.ensembl.org/pub/release-100/variation/indexed_vep_cache/homo_sapiens_vep_100_GRCh38.tar.gz
+tar xzf homo_sapiens_vep_100_GRCh38.tar.gz
