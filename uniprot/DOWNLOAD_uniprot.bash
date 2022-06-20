@@ -111,9 +111,16 @@ print("%d swiss curated uniprot Ids extracted"%len(swissprot_curated_uniprot_ids
 # Now copy over each line from the "all file" if it is a swiss-curated uniprot ID line
 with gzip.open(human_idmapping_file,'rt') as human_idmapping_all_f, gzip.open(human_idmapping_sprot_only_file,'wt') as human_idmapping_sprot_only_f:
     for line in human_idmapping_all_f:
-        # We need the left column of the tab delimited
-        # Then remove the iso-formspecific dashed number to check inclusion
-        if line.split('\t')[0].split('-')[0] in swissprot_curated_uniprot_ids:
+        # Parse the source line into tab-delimited
+        # unp at left, then id_type, then id
+        unp,id_type,id = line.split('\t')[0]
+
+        # Then remove the isoform specific dashed number to check inclusion
+        if unp.split('-')[0] in swissprot_curated_uniprot_ids:
+            # DO NOT include the RefSeq_NT entry for NC_ mitochondrial transcripts
+            # https://github.com/CapraLab/psbadmin/issues/65
+            if id_type == 'RefSeq_NT' and id.startswith('NC_'):
+                continue # Skip the troublesome NC_ mitochondrial refseq crossref
             human_idmapping_sprot_only_f.write(line)
     
 END_PROGRAM_HUMAN_SPROT_ONLY
