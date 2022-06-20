@@ -113,14 +113,17 @@ with gzip.open(human_idmapping_file,'rt') as human_idmapping_all_f, gzip.open(hu
     for line in human_idmapping_all_f:
         # Parse the source line into tab-delimited
         # unp at left, then id_type, then id
-        unp,id_type,id = line.split('\t')[0]
+        unp,id_type,id = line.split('\t')
 
         # Then remove the isoform specific dashed number to check inclusion
         if unp.split('-')[0] in swissprot_curated_uniprot_ids:
-            # DO NOT include the RefSeq_NT entry for NC_ mitochondrial transcripts
+            # DO NOT include the rare RefSeq_NT entry for NC_ mitochondrial transcripts
             # https://github.com/CapraLab/psbadmin/issues/65
             if id_type == 'RefSeq_NT' and id.startswith('NC_'):
+                print("Skipping mitochondrial refseq xref: %s" % line.strip())
                 continue # Skip the troublesome NC_ mitochondrial refseq crossref
+
+            # Write the "good" swiss-curated idmapping file entry
             human_idmapping_sprot_only_f.write(line)
     
 END_PROGRAM_HUMAN_SPROT_ONLY
