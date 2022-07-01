@@ -19,30 +19,28 @@
 # script, are strategies for coping with this.
 ########################################################
 
-# The YYYY-MM-DD directory is where logs of the rsyncs can 
-# be found.
+# The YYYY-MM-DD.log directory is where logs of the rsyncs can 
+# be found
 DATE=`date +%Y-%m-%d`
-mkdir -p $DATE
-
-# The $USER variable populates a few of the outputs
 USER=`whoami`
-
-# DO NOT CHANGE MIRRORDIR unless you are deviating from
-# the directory heirarchy discussed above, 
 MIRRORDIR='.'
+LOGDIR=$MIRRORDIR/$DATE.log            # directory for storing logs
+mkdir -pv $DATE.log
 # mkdir -p $MIRRORDIR
-
-# Copy this DOWNLOAD script into the local log directory
-cp -v ${0##*/} $MIRRORDIR/$DATE
+# Copy this script into the local log directory
+cp -v ${0##*/} $MIRRORDIR/$DATE.log
 
 echo "Creating README file"
 cat > README << ENDREADME 
 DO NOT HAND-EDIT THIS README FILE
 
-This file was last updated via $USER with the commands: 
+This file was last updated on $DATE
+by $USER with the commands: 
 
    \$ cd `pwd` 
    \$ ${0}
+
+See the contents of $LOGDIR for details of the last rsync of the pdb
 
 MAINTAINER: Chris Moth
 EMAIL: chris.moth@vanderbilt.edu
@@ -89,11 +87,14 @@ ENDREADME
 
 
 
+# For description of formats and downloads, see:
+# http://useast.ensembl.org/info/data/ftp/index.html/ 
+
+
 ############################################################################
 # You should CHANGE THE NEXT THREE LINES to suit your local setup
 ############################################################################
 
-LOGDIR=$MIRRORDIR/$DATE/log            # directory for storing logs
 # RSYNC=<your local>/rsync             # location of local rsync
 RSYNC=`command -v rsync`
 if ! [ -x "$RSYNC" ]; then
