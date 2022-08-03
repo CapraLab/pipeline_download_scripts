@@ -178,10 +178,11 @@ echo ""
 
 echo "4 of 4: Download biounits in mmCIF format" | tee -a README
 ############################################################################
-# Rsync only the mmCIF format coordinates  /pub/pdb/data/biounit/mmCIF/divided (Aproximately 20 GB)
+
+# Rsync only the mmCIF format coordinates  /pub/pdb/data/assemblies/mmCIF/divided (Aproximately 20 GB)
 ############################################################################
 mkdir -vp $MIRRORDIR/biounit/mmCIF/divided
-cmd="${RSYNC} -rlpt -v -z --delete --port=$PORT ${SERVER}/data/biounit/mmCIF/divided/ $MIRRORDIR/biounit/mmCIF/divided > $LOGDIR/rsync_biounit_mmCIF.stdout 2> $LOGDIR/rsync_biounit_mmCIF.stderr"
+cmd="${RSYNC} -rlpt -v -z --delete --port=$PORT ${SERVER}/data/assemblies/mmCIF/divided/ $MIRRORDIR/biounit/mmCIF/divided > $LOGDIR/rsync_biounit_mmCIF.stdout 2> $LOGDIR/rsync_biounit_mmCIF.stderr"
 echo $cmd >> README
 echo $cmd | tee $LOGDIR/rsync_biounit_mmCIF.stdout
 eval $cmd
