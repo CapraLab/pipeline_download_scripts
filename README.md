@@ -1,6 +1,7 @@
 # PSB Pipeline Downloads
 
-Running the PSB Pipeline requires downloading a few public databases to sibing wherever/data/{pdb,swissmodel,modbase2020,alphafold,etc} sub-directories.
+Running the PSB Pipeline requires downloading a few public databases to sibling 
+...../wherever/data/{pdb,swissmodel,modbase2020,alphafold,etc} sub-directories.
 
 Use the short bash scripts provided here to ensure that your final filesystem layouts match pipeline code expectations.
 
