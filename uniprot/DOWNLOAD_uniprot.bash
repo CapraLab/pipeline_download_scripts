@@ -176,6 +176,6 @@ echo "MANIFEST:" >> $DATE/README
 ls $DATE >> $DATE/README
 echo "**************"
 echo ""
-echo "UPDATE ${DATE}/README!
+echo "UPDATE ${DATE}/README!"
 echo ""
 echo "**************"
