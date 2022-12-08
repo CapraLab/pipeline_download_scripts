@@ -4,5 +4,5 @@
 #
 mkdir -p vep_cache
 cd vep_cache
-curl -O ftp://ftp.ensembl.org/pub/release-100/variation/indexed_vep_cache/homo_sapiens_vep_100_GRCh38.tar.gz
-tar xzf homo_sapiens_vep_100_GRCh38.tar.gz
+curl -O ftp://ftp.ensembl.org/pub/release-100/variation/indexed_vep_cache/homo_sapiens_vep_108_GRCh38.tar.gz
+tar xzf homo_sapiens_vep_108_GRCh38.tar.gz
