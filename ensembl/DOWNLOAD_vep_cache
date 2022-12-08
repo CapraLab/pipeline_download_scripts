@@ -2,6 +2,9 @@
 # The vep_cache is used by the variant effect predictor
 # It may not be needed for basic pipeline operation from a missense.csv file
 #
+# WARNING: It appears ensembl has replced direct download of cache files with their INSTALL.pl
+# process.  Please DO NOT use this file until this issue is understood.
+#
 mkdir -p vep_cache
 cd vep_cache
 curl -O ftp://ftp.ensembl.org/pub/release-100/variation/indexed_vep_cache/homo_sapiens_vep_108_GRCh38.tar.gz
