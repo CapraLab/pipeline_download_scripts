@@ -18,7 +18,7 @@ do
 echo $transcript_variation_piece
 mv --verbose $transcript_variation_piece transcript_variation.txt
 echo $transcript_variation_piece ": begin mysqlimport"
-mysqlimport --fields-terminated-by='\t' --fields-escaped-by=\\ homo_sapiens_variation_$version -preplace_with_pw -L transcript_variation.txt | tee -a mysqlimport.log
+mysqlimport --verbose --fields-terminated-by='\t' --fields-escaped-by=\\ homo_sapiens_variation_$version -preplace_with_pw -L transcript_variation.txt | tee -a mysqlimport.log
 if [$? -eq 0 ]; then
     echo "mysqlimport successfully returned 0.  Removing input piece file"
     rm --verbose transcript_variation.txt
