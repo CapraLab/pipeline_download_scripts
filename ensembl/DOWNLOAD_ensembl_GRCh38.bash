@@ -14,8 +14,12 @@
 # STEPS AFTER DOWNLOAD:
 # 1 DATABASE update: The subsequent database creation steps are at:
 # https://useast.ensembl.org/info/docs/webcode/mirror/install/ensembl-data.html
-#    (The needed"mysqlimport" commands can take a lot of time.)
+#    (The needed"mysqlimport" commands can take a lot of time.  In particular
+#     transcript_variation is a huge table.  A sibling file to this one shows
+#     how to split that one into 5,000,000 line pieces)
+#      
 # 2 Refresh the PERL API to match the new ENSEMBL version
+#
 # 3 Run test tools (not yet developed) to compare the ENSEMBL transcript amino acid sequences 
 #   to uniprot sequences
 #
@@ -28,8 +32,6 @@
 #   echo -n "$file   "
 #   zcat $file | wc -l
 #   done
-
-
 
 USER=`whoami`
 DATE=`date +%Y-%m-%d`
