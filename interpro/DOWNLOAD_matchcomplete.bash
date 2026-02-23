@@ -17,49 +17,99 @@
 #
 # The downloads are large.  You should remove older downloaded versions as you can
 
-USER=`whoami`
-DATE=`date +%Y-%m-%d`
+## Set exit short-circuits for all download scripts.  
+## GOAL: Do NOT process incomplete data
+set -o errexit  # Stop script if a command exits with non zero
+set -o nounset  # Treat unset variables as an error when substituting
+set -o pipefail # the return value of a pipeline is the status of
+                # the last command to exit with a non-zero status,
+                # or zero if no command exited with a non-zero status
 
-cmd="mkdir -pv $DATE"
-echo Executing: $cmd
-eval $cmd
+# Init Dictionary keys for final README and .YAML version record outputs
+readonly MAINTAINER='chris.moth@vanderbilt.edu'
+readonly DOWNLOAD_START=`date -Is`
+readonly DOWNLOAD_SCRIPTFILE=${0##*/}
+readonly DATE_YYMMDD=`date +%Y-%m-%d`
 
-# Copy this script into the new directory
-cp -v ${0##*/} $DATE
+readonly LOG_FILE="$(pwd)/$DATE_YYMMDD/DOWNLOAD_interpro.log"
 
-# For description of formats and downloads, see:
-# https://www.uniprot.org/help/about
-# http://www.uniprot.org/downloads
+readonly PUBLICATION_DOI="https://doi.org/10.1038/s41586-021-03819-2"
 
-#get uniprot dataset
-# OLD IDEA wget -N --tries=100 --timeout=100000 ftp://ftp.ebi.ac.uk/pub/databases/interpro/current/match_complete.xml.gz -P $DATE -nd -nH
-cmd='wget -N --tries=100 --timeout=100000 https://ftp.ebi.ac.uk/pub/databases/interpro/current_release/match_complete.xml.gz -P $DATE -nd -nH'
-echo Executing: $cmd
-eval $cmd
-echo Updating \'current\' symbolic link tp referemce $DATE
+readonly INTERPRO_BASE_URL="https://ftp.ebi.ac.uk/pub/databases/interpro/current_release/"
+readonly XML_FILENAME="match_complete.xml.gz"
+
+# When I create final README and YAML Files at close of these script, these variables are output
+declare -a VERSION_KEYS=("MAINTAINER" "PUBLICATION_DOI" "DOWNLOAD_START" "DOWNLOAD_END" "DATE_YYMMDD" "LOG_FILE" "DOWNLOAD_SCRIPTFILE")
+
+# All files are downloaded to current_working_directory/$DATE_YYMMDD
+# At the end of the script a link from currnet_working_directory/current is made, for convenience
+mkdir_cmd="mkdir -pv $DATE_YYMMDD"
+result=`eval $mkdir_cmd`
+touch $LOG_FILE
+echo "$mkdir_cmd: $result" | tee $LOG_FILE
+
+# redirect all output to both console and log (append)
+# exec > >(tee -a "$LOG_FILE") 2>&1
+# echo test
+
+# Copy this script into the new directory, as complete record
+echo "`date -Is`: Saving this script as $DATE_YYMMDD/$DOWNLOAD_SCRIPTFILE.save" |tee -a $LOG_FILE
+cmd="cp -pv $DOWNLOAD_SCRIPTFILE $DATE_YYMMDD/$DOWNLOAD_SCRIPTFILE.save" 
+eval $cmd | tee -a $LOG_FILE
+# echo "`date -Is`: `eval $cmd`" | tee -a $LOG_FILE
+
+function download_interpro_xml_via_tempfile() {
+  TMPFILE=$(mktemp $DATE_YYMMDD/tempfile.XXXXXXX)
+  cmd="wget -O $TMPFILE --no-verbose --no-parent --directory-prefix=$DATE_YYMMDD -N --reject --no-host-directories --no-directories --timeout=100000 $INTERPRO_BASE_URL/$XML_FILENAME"
+  echo "`date -Is`: Executing $cmd" | tee -a $LOG_FILE
+  eval $cmd 2&>1 | tee -a $LOG_FILE
+  # If wget returns non-0 the entire script must stop
+  # Nonetheless in case of any mis-setting above, it is good to date stamp completion
+  wget_exit_code=$?
+  echo "`date -Is`: wget finished downloading $XML_FILENAME to $TMPFILE with code $wget_exit_code" | tee -a $LOG_FILE
+  cmd="mv $TMPFILE $DATE_YYMMDD/$XML_FILENAME"
+  echo "`date -Is`: Executing $cmd" | tee -a $LOG_FILE
+  eval $cmd
+}
+
+
+download_interpro_xml_via_tempfile
+
+### After success, create README and .yaml version files
+readonly DOWNLOAD_END=`date -Is`
+echo "$DOWNLOAD_END: Script Epilog: Creating README and interpro.yaml files" | tee -a $LOG_FILE
+
+## README file first
+for key in "${VERSION_KEYS[@]}"
+do
+    declare -n key_ref="$key"
+    printf "%s: %s\n" $key $key_ref | tee -a $DATE_YYMMDD/README
+done
+
+## do entire file listing to the README
+echo "Recording ls -lR of $DATE_YYMMDD/ in README" | tee -a $LOG_FILE
+ls -lR $DATE_YYMMDD >>  $DATE_YYMMDD/README
+
+
+## Create interpro.yaml
+echo `date -Is`": Creating interpro.yaml file" | tee -a $LOG_FILE
+
+rm -f $DATE_YYMMDD/interpro.yaml
+for key in "${VERSION_KEYS[@]}"
+do
+    lower_case_key=${key,,}
+    declare -n key_ref="$key"
+    # Write out the key and the referenced string
+    printf "%s: %s\n" $lower_case_key $key_ref | tee -a $DATE_YYMMDD/interpro.yaml
+done
+
+# Remove the current/ symlink and repoint it to the newly arrived download
 cmd='rm -f current'
-echo Executing: $cmd
-eval $cmd
+echo `date -Is`": $cmd" | tee -a $LOG_FILE
+eval $cmd 2>&1 | tee -a $LOG_FILE
+# The _very_ last event is to create a symbolik link from current/ directory
+cmd="ln -s $DATE_YYMMDD current"
+echo `date -Is`": $cmd" | tee -a $LOG_FILE
+eval $cmd 2>&1 | tee -a $LOG_FILE
 
-cmd="ln -s $DATE/ current"
-echo Executing: $cmd
-eval $cmd
-
-# Create README
-echo "# MAINTAINER: $USER" >> $DATE/README
-echo "# EMAIL: chris.moth@vanderbilt.edu" >> $DATE/README
-echo "# LAST_UPDATE: $DATE" >> $DATE/README
-echo "# UPDATE_CMD: ${0}" >> $DATE/README
-echo "# CITATION: PDBID 33156333" >> $DATE/README
-echo "" >> $DATE/README
-echo "Follow with post processing to create match_human.xml. This file is input to the psb pipeline's report gneerator." >> $DATE/README
-
-echo "" >> $DATE/README
-echo "" >> $DATE/README
-echo "MANIFEST:" >> $DATE/README
-ls $DATE >> $DATE/README
-echo "**************"
-echo ""
-echo "UPDATE ${DATE}/README!"
-echo ""
-echo "**************"
+echo `date -Is` ": Download script is complete.  Results are in $DATE_YYMMDD/" | tee -a $LOG_FILE
