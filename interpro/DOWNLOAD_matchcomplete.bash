@@ -60,9 +60,9 @@ eval $cmd | tee -a $LOG_FILE
 
 function download_interpro_xml_via_tempfile() {
   TMPFILE=$(mktemp $DATE_YYMMDD/tempfile.XXXXXXX)
-  cmd="wget -O $TMPFILE --no-verbose --no-parent --directory-prefix=$DATE_YYMMDD --reject --no-host-directories --no-directories --timeout=100000 $INTERPRO_BASE_URL/$XML_FILENAME"
+  cmd="wget -O $TMPFILE --no-verbose --no-parent --directory-prefix=$DATE_YYMMDD -N --reject --no-host-directories --no-directories --timeout=100000 $INTERPRO_BASE_URL/$XML_FILENAME"
   echo "`date -Is`: Executing $cmd" | tee -a $LOG_FILE
-  eval $cmd 2>&1 | tee -a $LOG_FILE
+  eval $cmd 2&>1 | tee -a $LOG_FILE
   # If wget returns non-0 the entire script must stop
   # Nonetheless in case of any mis-setting above, it is good to date stamp completion
   wget_exit_code=$?
